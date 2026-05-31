@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 
 android {
@@ -22,6 +23,17 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    // Expose a single "release" software component for Maven publishing, including a sources jar.
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
@@ -29,4 +41,20 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+}
+
+// JitPack consumes this as com.github.mafmudin:progress-sg:<tag>.
+// artifactId is pinned to the REPO name (progress-sg), not the Gradle module name
+// (progress-svg), to preserve the coordinate already published as 0.0.1.
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = project.group.toString()
+                artifactId = 'progress-sg'
+                version = project.version.toString()
+            }
+        }
+    }
 }

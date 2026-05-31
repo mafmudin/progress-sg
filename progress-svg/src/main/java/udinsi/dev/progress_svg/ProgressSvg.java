@@ -7,8 +7,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.Window;
 import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.widget.TextView;
+
+import udinsi.dev.progress_svg.databinding.DialogSvgBinding;
 
 public class ProgressSvg {
     /*
@@ -41,20 +41,18 @@ public class ProgressSvg {
         dialog.setCancelable(cancleable);
         dialog.setCanceledOnTouchOutside(cancleOnTouchOutside);
 
-        dialog.setContentView(R.layout.dialog_svg);
+        DialogSvgBinding binding = DialogSvgBinding.inflate(dialog.getLayoutInflater());
+        dialog.setContentView(binding.getRoot());
 
-        WebView webView = dialog.findViewById(R.id.webView);
-        TextView textView = dialog.findViewById(R.id.loadingMessage);
-
-        webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
-        webView.setBackgroundColor(backgroundColor);
-        webView.loadDataWithBaseURL("file:///android_asset/", svgAssets,
+        binding.webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
+        binding.webView.setBackgroundColor(backgroundColor);
+        binding.webView.loadDataWithBaseURL("file:///android_asset/", svgAssets,
                 "text/html", "utf-8", null);
 
-        textView.setTextSize(textSize);
-        textView.setTextColor(textColor);
+        binding.loadingMessage.setTextSize(textSize);
+        binding.loadingMessage.setTextColor(textColor);
 
-        textView.setText(message);
+        binding.loadingMessage.setText(message);
 
         dialog.show();
     }

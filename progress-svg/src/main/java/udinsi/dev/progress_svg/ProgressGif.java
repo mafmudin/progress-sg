@@ -5,9 +5,8 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.Window;
-import android.widget.TextView;
 
-import udinsi.dev.progress_svg.player.GifPlayer;
+import udinsi.dev.progress_svg.databinding.DialogBinding;
 
 public class ProgressGif {
 
@@ -41,16 +40,14 @@ public class ProgressGif {
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
         dialog.setCancelable(cancleable);
         dialog.setCanceledOnTouchOutside(cancleOnTouchOutside);
-        dialog.setContentView(R.layout.dialog);
+        DialogBinding binding = DialogBinding.inflate(dialog.getLayoutInflater());
+        dialog.setContentView(binding.getRoot());
 
-        GifPlayer gifPlayer = (GifPlayer) dialog.findViewById(R.id.gifPlayer);
-        TextView textView = (TextView) dialog.findViewById(R.id.loadingMessage);
+        binding.loadingMessage.setTextColor(textColor);
+        binding.loadingMessage.setTextSize(textSize);
 
-        textView.setTextColor(textColor);
-        textView.setTextSize(textSize);
-
-        textView.setText(message);
-        gifPlayer.setGifFromResource(gifResource);
+        binding.loadingMessage.setText(message);
+        binding.gifPlayer.setGifFromResource(gifResource);
         dialog.show();
     }
 

@@ -1,0 +1,89 @@
+name: Release
+
+# Single source of truth for the version is the git tag (bare semver, e.g. 0.0.2 — no "v" prefix,
+# to match the existing 0.0.1 release). Two ways to cut a release:
+#   1. workflow_dispatch  -> pick a bump (patch/minor/major); the tag is derived & pushed here.
+#   2. push a tag like 0.1.0 manually -> the workflow picks up that exact version.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # all tags are needed to derive the next version
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Derive version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+            echo "created_here=false" >> "$GITHUB_OUTPUT"
+          else
+            LATEST=$(git tag -l '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+            [ -z "$LATEST" ] && LATEST="0.0.0"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
+            case "${{ inputs.bump }}" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
+            esac
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            echo "created_here=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: ${VERSION}"
+
+      - name: Build & validate publication
+        run: >
+          ./gradlew clean
+          :progress-svg:assembleRelease
+          :progress-svg:publishToMavenLocal
+          -PVERSION=${{ steps.version.outputs.version }}
+
+      - name: Create and push tag
+        if: steps.version.outputs.created_here == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.version }}" -m "Release ${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: progress-svg/build/outputs/aar/progress-svg-release.aar
+
+      - name: Warm up JitPack
+        run: |
+          curl -sf "https://jitpack.io/com/github/mafmudin/progress-sg/${{ steps.version.outputs.version }}/build.log" || true
