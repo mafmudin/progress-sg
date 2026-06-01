@@ -3,18 +3,19 @@
 # Progress-svg-gif
 android progress dialog dengan menggunakan file svg atau gif
 
-## Kompatibilitas / Migrasi ke 1.0.0
+## Kompatibilitas / Migrasi ke 2.0.0
 
-Versi `1.0.0` membenahi penamaan method yang sebelumnya salah eja (breaking change):
+Mulai `2.0.0` library ditulis dalam **Kotlin** dan rendering memakai **Coil**. `ProgressSvg`
+dan `ProgressGif` digabung menjadi satu kelas **`FoProgressDialog`** (breaking change):
 
-| 0.0.1 (lama)                   | 1.0.0 (baru)                   |
-|--------------------------------|--------------------------------|
-| `dissmis()`                    | `dismiss()`                    |
-| `setCancleable(...)`           | `setCancelable(...)`           |
-| `setCancleOnTouchOutside(...)` | `setCancelOnTouchOutside(...)` |
+| Lama (1.0.0)                                            | Baru (2.0.0)                                                  |
+|---------------------------------------------------------|---------------------------------------------------------------|
+| `new ProgressSvg(ctx)` + `setSvgAssets("x.svg")`        | `new FoProgressDialog.Builder(ctx).svg("x.svg").build()`      |
+| `new ProgressGif(ctx)` + `setGifResource(R.drawable.x)` | `new FoProgressDialog.Builder(ctx).gif(R.drawable.x).build()` |
 
-Selain itu kini tersedia **Builder** yang fluent. Jika belum bisa migrasi, pin versi lama:
-`com.github.mafmudin:progress-sg:0.0.1`.
+- SVG tetap dari folder `assets/`; GIF tetap dari `res/drawable`.
+- `dismiss()`, `setMessage`, `setCancelable`, dst. tetap tersedia (lewat properti/Builder).
+- Jika belum bisa migrasi, pin versi lama: `com.github.mafmudin:progress-sg:1.0.0`.
 
 ### cara menambahkan progress-svg-gif ke project android studio dengan menggunakan gradle
 * tambahkan kode di bawah kedalam file ```build.gradle``` (root project)
@@ -32,7 +33,7 @@ allprojects {
 
 ```
 dependencies {
-  implementation 'com.github.mafmudin:progress-sg:1.0.0'
+  implementation 'com.github.mafmudin:progress-sg:2.0.0'
 }
 ```
 
@@ -54,7 +55,7 @@ dependencies {
 <dependency>
   <groupId>com.github.mafmudin</groupId>
   <artifactId>progress-sg</artifactId>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -68,28 +69,28 @@ dependencies {
 * gunakan progress-svg-gif seperti penggunaan progress dialog, contoh penggunaannya yaitu:
 
 ```
-// Cara 1 — setter (nama method sudah benar di 1.0.0)
-ProgressSvg progressSvg = new ProgressSvg(MainActivity.this);
-progressSvg.setSvgAssets("loading_circle.svg");
-progressSvg.setMessage(getResources().getString(R.string.please_wait));
-progressSvg.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.colorAccent));
-progressSvg.setTextSize(11.0f);
-progressSvg.setBackgroundColor(Color.GRAY);
-progressSvg.setCancelable(false);
-progressSvg.setCancelOnTouchOutside(false);
-progressSvg.show();
-
-// menyembunyikan progress:
-progressSvg.dismiss();
-
-// Cara 2 — Builder
-ProgressSvg p = new ProgressSvg.Builder(MainActivity.this)
+// Java — Builder
+FoProgressDialog p = new FoProgressDialog.Builder(MainActivity.this)
         .svg("loading_circle.svg")
         .message(getResources().getString(R.string.please_wait))
-        .textColor(Color.BLACK)
-        .cancelable(false)
+        .textColor(ContextCompat.getColor(MainActivity.this, R.color.colorAccent))
+        .textSize(11f)
+        .backgroundColor(Color.GRAY)
         .build();
 p.show();
+p.dismiss();
+```
+
+```
+// Kotlin — DSL
+val p = foProgressDialog(this) {
+    svg("loading_circle.svg")
+    message = getString(R.string.please_wait)
+    textColor = Color.BLACK
+    cancelable = false
+}
+p.show()
+p.dismiss()
 ```
 
 yap, *enjoy* penggunaan progress-svg-gif :)
@@ -105,18 +106,18 @@ yap, *enjoy* penggunaan progress-svg-gif :)
 * contoh pennggunaan progress-svg-gif yaitu: 
 
 ```
-// setter
-ProgressGif progressGif = new ProgressGif(MainActivity.this);
-progressGif.setGifResource(R.drawable.mag);
-progressGif.setMessage(getResources().getString(R.string.searching));
-progressGif.show();
-
-// Builder
-ProgressGif g = new ProgressGif.Builder(MainActivity.this)
+// Java
+FoProgressDialog g = new FoProgressDialog.Builder(MainActivity.this)
         .gif(R.drawable.mag)
         .message(getResources().getString(R.string.searching))
         .build();
 g.show();
+
+// Kotlin
+foProgressDialog(this) {
+    gif(R.drawable.mag)
+    message = getString(R.string.searching)
+}.show()
 ```
 
 #### Download loading / progress svg, gif atau apng file di link berikut

@@ -1,76 +1,78 @@
-package udinsi.dev.progress_svg;
+package udinsi.dev.progress_svg
 
-import android.graphics.Color;
-import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
-import android.view.View;
+import android.graphics.Color
+import android.os.Bundle
+import android.os.Handler
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import udinsi.dev.progress_svg.databinding.ActivityMainBinding
 
-import udinsi.dev.progress_svg.databinding.ActivityMainBinding;
+class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
 
-public class MainActivity extends AppCompatActivity{
-    private ActivityMainBinding binding;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        binding.loading.setOnClickListener(listener);
-        binding.searching.setOnClickListener(listener);
-        binding.login.setOnClickListener(listener);
-        binding.update.setOnClickListener(listener);
-        binding.sending.setOnClickListener(listener);
-        binding.upload.setOnClickListener(listener);
-        binding.searchingGif.setOnClickListener(listener);
+        val buttons = listOf(
+            binding.loading, binding.searching, binding.login,
+            binding.update, binding.sending, binding.upload, binding.searchingGif,
+        )
+        buttons.forEach { it.setOnClickListener(listener) }
     }
 
-    private View.OnClickListener listener = v -> {
-        int id = v.getId();
-        ProgressSvg progressSvg = new ProgressSvg(MainActivity.this);
-        // AGP 8.x defaults android.nonFinalResIds=true, so R.id.* are non-final and can't be
-        // used as switch case labels (which require constant expressions). Use if/else instead.
-        if (id == R.id.loading) {
-            progressSvg.setSvgAssets("loading_circle.svg");
-            progressSvg.setMessage(getResources().getString(R.string.please_wait));
-            progressSvg.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.colorAccent));
-            progressSvg.setTextSize(11.0f);
-            progressSvg.setBackgroundColor(Color.GRAY);
-            progressSvg.show();
-        } else if (id == R.id.searching) {
-            progressSvg.setSvgAssets("loading_mag.svg");
-            progressSvg.setMessage(getResources().getString(R.string.searching));
-            progressSvg.setBackgroundColor(Color.GREEN);
-            progressSvg.show();
-        } else if (id == R.id.login) {
-            // Builder style + dismiss() showcase: auto-close after 3s.
-            ProgressSvg builderDemo = new ProgressSvg.Builder(MainActivity.this)
-                    .svg("login.svg")
-                    .message(getResources().getString(R.string.login))
-                    .cancelable(true)
-                    .build();
-            builderDemo.show();
-            new android.os.Handler(getMainLooper())
-                    .postDelayed(builderDemo::dismiss, 3000);
-        } else if (id == R.id.update) {
-            progressSvg.setSvgAssets("reload.svg");
-            progressSvg.setMessage(getResources().getString(R.string.update));
-            progressSvg.show();
-        } else if (id == R.id.sending) {
-            progressSvg.setSvgAssets("sending.svg");
-            progressSvg.setMessage(getResources().getString(R.string.sending));
-            progressSvg.show();
-        } else if (id == R.id.upload) {
-            progressSvg.setSvgAssets("upload.svg");
-            progressSvg.setMessage(getResources().getString(R.string.upload));
-            progressSvg.show();
-        } else if (id == R.id.searchingGif) {
-            ProgressGif progressGif = new ProgressGif(MainActivity.this);
-            progressGif.setGifResource(R.drawable.mag);
-            progressGif.setMessage(getResources().getString(R.string.searching));
-            progressGif.show();
+    private val listener = View.OnClickListener { v ->
+        when (v.id) {
+            R.id.loading -> FoProgressDialog.Builder(this)
+                .svg("loading_circle.svg")
+                .message(getString(R.string.please_wait))
+                .textColor(ContextCompat.getColor(this, R.color.colorAccent))
+                .textSize(11f)
+                .backgroundColor(Color.GRAY)
+                .build()
+                .show()
+
+            R.id.searching -> FoProgressDialog.Builder(this)
+                .svg("loading_mag.svg")
+                .message(getString(R.string.searching))
+                .backgroundColor(Color.GREEN)
+                .build()
+                .show()
+
+            R.id.login -> {
+                // Kotlin DSL + dismiss() showcase: auto-close after 3s.
+                val p = foProgressDialog(this) {
+                    svg("login.svg")
+                    message = getString(R.string.login)
+                    cancelable = true
+                }
+                p.show()
+                Handler(mainLooper).postDelayed({ p.dismiss() }, 3000L)
+            }
+
+            R.id.update -> foProgressDialog(this) {
+                svg("reload.svg")
+                message = getString(R.string.update)
+            }.show()
+
+            R.id.sending -> foProgressDialog(this) {
+                svg("sending.svg")
+                message = getString(R.string.sending)
+            }.show()
+
+            R.id.upload -> foProgressDialog(this) {
+                svg("upload.svg")
+                message = getString(R.string.upload)
+            }.show()
+
+            R.id.searchingGif -> FoProgressDialog.Builder(this)
+                .gif(R.drawable.mag)
+                .message(getString(R.string.searching))
+                .build()
+                .show()
         }
-    };
+    }
 }
