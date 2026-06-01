@@ -40,6 +40,11 @@ public class GifPlayer extends View {
         InputStream inputStream = getContext().getResources().openRawResource(resourceId);
         mMovie = Movie.decodeStream(inputStream);
 
+        if (mMovie == null) {
+            throw new IllegalArgumentException(
+                    "could not decode GIF from resource id=" + resourceId);
+        }
+
         this.intId = resourceId;
         this.lngWidth = mMovie.width();
         this.lngHeight = mMovie.height();

@@ -1,123 +1,106 @@
 package udinsi.dev.progress_svg;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.view.Window;
 import android.webkit.WebSettings;
 
 import udinsi.dev.progress_svg.databinding.DialogSvgBinding;
 
-public class ProgressSvg {
-    /*
-    set default value
-     */
-    private Context context;
-    private Dialog dialog;
-    private String svgAssets;
-    private String message = "";
-    private float textSize = 20.0f;
-    private int textColor = Color.WHITE;
-    private int backgroundColor = android.graphics.Color.TRANSPARENT;
-    private boolean cancleable = true;
-    private boolean cancleOnTouchOutside = false;
+public class ProgressSvg extends AbstractProgress {
 
-    /*
-    constructor for this class, to get current context
-     */
-    public ProgressSvg(Context context){
-        this.context = context;
-        dialog = new Dialog(this.context);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+    /** Raw asset filename; null until set — used by {@link #validate()}. */
+    String svgAssets;
+    /** HTML wrapper actually loaded into the WebView. */
+    private String svgHtml;
+
+    public ProgressSvg(Context context) {
+        super(context);
     }
 
-    /*
-    show dialog to activity, by default the backgroun
+    /**
+     * Sets the SVG asset by filename. The file must live in the app's {@code assets/} folder.
+     * The filename is wrapped in a centered HTML {@code <img>} template and rendered via WebView.
      */
-    public void show(){
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
-        dialog.setCancelable(cancleable);
-        dialog.setCanceledOnTouchOutside(cancleOnTouchOutside);
-
-        DialogSvgBinding binding = DialogSvgBinding.inflate(dialog.getLayoutInflater());
-        dialog.setContentView(binding.getRoot());
-
-        binding.webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
-        binding.webView.setBackgroundColor(backgroundColor);
-        binding.webView.loadDataWithBaseURL("file:///android_asset/", svgAssets,
-                "text/html", "utf-8", null);
-
-        binding.loadingMessage.setTextSize(textSize);
-        binding.loadingMessage.setTextColor(textColor);
-
-        binding.loadingMessage.setText(message);
-
-        dialog.show();
-    }
-
-    public void dissmis(){
-        dialog.dismiss();
-    }
-
-    /*
-    set message for progress, String required
-     */
-    public void setMessage(String message){
-        this.message = message;
-    }
-
-    /*
-    set svg with webview, svg file must placed in assets file.
-    need svg file name to load to webview
-     */
-    public void setSvgAssets(String svgAssets) {
-        this.svgAssets = "<html>\n" +
+    public void setSvgAssets(String filename) {
+        this.svgAssets = filename;
+        this.svgHtml = "<html>\n" +
                 "<head>\n" +
                 "<style type=text/css>\n" +
                 "body{margin:0 auto;text-align:center;}\n" +
                 "</style>\n" +
                 "</head>\n" +
                 "<body>\n" +
-                "<img src=\""+svgAssets+"\">\n" +
+                "<img src=\"" + filename + "\">\n" +
                 "</object>\n" +
                 "</body>\n" +
                 "</html>";
     }
 
-    /*
-    change text size, float value required
-     */
-    public void setTextSize(float textSize){
-        this.textSize = textSize;
+    @Override
+    protected void validate() {
+        if (svgAssets == null) {
+            throw new IllegalStateException(
+                    "svg asset not set — call setSvgAssets()/Builder.svg() before show()");
+        }
     }
 
-    /*
-    change text color, int value required
-     */
-    public void setTextColor(int textColor){
-        this.textColor = textColor;
+    @Override
+    protected void renderContent() {
+        DialogSvgBinding binding = DialogSvgBinding.inflate(dialog.getLayoutInflater());
+        dialog.setContentView(binding.getRoot());
+
+        binding.webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
+        binding.webView.setBackgroundColor(backgroundColor);
+        binding.webView.loadDataWithBaseURL("file:///android_asset/", svgHtml,
+                "text/html", "utf-8", null);
+
+        applyMessage(binding.loadingMessage);
     }
 
-    /*
-    change background color, int value required
-     */
-    public void setBackgroundColor(int backgroundColor){
-        this.backgroundColor = backgroundColor;
-    }
+    /** Fluent builder for {@link ProgressSvg}. Call {@link #build()} then {@code show()}. */
+    public static class Builder {
+        private final ProgressSvg target;
 
-    /*
-    set cancleable, boolean value required
-     */
-    public void setCancleable(boolean cancleable){
-        this.cancleable = cancleable;
-    }
+        public Builder(Context context) {
+            this.target = new ProgressSvg(context);
+        }
 
-    /*
-    set cancle on touch outside, boolean value required
-     */
-    public void setCancleOnTouchOutside(boolean cancleOnTouchOutside) {
-        this.cancleOnTouchOutside = cancleOnTouchOutside;
+        public Builder message(String message) {
+            target.setMessage(message);
+            return this;
+        }
+
+        public Builder textSize(float textSize) {
+            target.setTextSize(textSize);
+            return this;
+        }
+
+        public Builder textColor(int textColor) {
+            target.setTextColor(textColor);
+            return this;
+        }
+
+        public Builder backgroundColor(int backgroundColor) {
+            target.setBackgroundColor(backgroundColor);
+            return this;
+        }
+
+        public Builder cancelable(boolean cancelable) {
+            target.setCancelable(cancelable);
+            return this;
+        }
+
+        public Builder cancelOnTouchOutside(boolean cancelOnTouchOutside) {
+            target.setCancelOnTouchOutside(cancelOnTouchOutside);
+            return this;
+        }
+
+        public Builder svg(String filename) {
+            target.setSvgAssets(filename);
+            return this;
+        }
+
+        public ProgressSvg build() {
+            return target;
+        }
     }
 }

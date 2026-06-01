@@ -1,107 +1,84 @@
 package udinsi.dev.progress_svg;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.view.Window;
 
 import udinsi.dev.progress_svg.databinding.DialogBinding;
 
-public class ProgressGif {
+public class ProgressGif extends AbstractProgress {
 
-    /*
-    set default value
-     */
-    Context context;
-    Dialog dialog;
-
+    /** Drawable resource id of the GIF; 0 until set — used by {@link #validate()}. */
     int gifResource;
-    String message = "";
-    private float textSize = 20.0f;
-    private int textColor = Color.WHITE;
-    private int backgroundColor = android.graphics.Color.TRANSPARENT;
-    private boolean cancleable = true;
-    private boolean cancleOnTouchOutside = false;
 
-    /*
-    constructor for this class, to get current context
-    */
-    public ProgressGif(Context context){
-        this.context = context;
-        dialog = new Dialog(context);
+    public ProgressGif(Context context) {
+        super(context);
     }
 
-    /*
-    show dialog to activity, by default the backgroun
-     */
-    public void show(){
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
-        dialog.setCancelable(cancleable);
-        dialog.setCanceledOnTouchOutside(cancleOnTouchOutside);
-        DialogBinding binding = DialogBinding.inflate(dialog.getLayoutInflater());
-        dialog.setContentView(binding.getRoot());
-
-        binding.loadingMessage.setTextColor(textColor);
-        binding.loadingMessage.setTextSize(textSize);
-
-        binding.loadingMessage.setText(message);
-        binding.gifPlayer.setGifFromResource(gifResource);
-        dialog.show();
-    }
-
-    public void dissmis(){
-        dialog.dismiss();
-    }
-
-    /*
-    set gifplayer, gif must saved on drawable
-    gif resource required
-     */
-    public void setGifResource(int gifResource){
+    /** Sets the GIF by drawable/raw resource id (the file lives in {@code res/drawable}). */
+    public void setGifResource(int gifResource) {
         this.gifResource = gifResource;
     }
 
-    /*
-    set message for progress, String required
-    */
-    public void setMessage(String message){
-        this.message = message;
+    @Override
+    protected void validate() {
+        if (gifResource == 0) {
+            throw new IllegalStateException(
+                    "gif resource not set — call setGifResource()/Builder.gif() before show()");
+        }
     }
 
-    /*
-   change text size, float value required
-    */
-    public void setTextSize(float textSize) {
-        this.textSize = textSize;
+    @Override
+    protected void renderContent() {
+        DialogBinding binding = DialogBinding.inflate(dialog.getLayoutInflater());
+        dialog.setContentView(binding.getRoot());
+        binding.gifPlayer.setGifFromResource(gifResource);
+        applyMessage(binding.loadingMessage);
     }
 
-    /*
-    change text color, int value required
-     */
-    public void setTextColor(int textColor) {
-        this.textColor = textColor;
-    }
+    /** Fluent builder for {@link ProgressGif}. Call {@link #build()} then {@code show()}. */
+    public static class Builder {
+        private final ProgressGif target;
 
-    /*
-   change background color, int value required
-    */
-    public void setBackgroundColor(int backgroundColor) {
-        this.backgroundColor = backgroundColor;
-    }
+        public Builder(Context context) {
+            this.target = new ProgressGif(context);
+        }
 
-    /*
-    set cancleable, boolean value required
-     */
-    public void setCancleable(boolean cancleable) {
-        this.cancleable = cancleable;
-    }
+        public Builder message(String message) {
+            target.setMessage(message);
+            return this;
+        }
 
-    /*
-    set cancle on touch outside, boolean value required
-     */
-    public void setCancleOnTouchOutside(boolean cancleOnTouchOutside) {
-        this.cancleOnTouchOutside = cancleOnTouchOutside;
+        public Builder textSize(float textSize) {
+            target.setTextSize(textSize);
+            return this;
+        }
+
+        public Builder textColor(int textColor) {
+            target.setTextColor(textColor);
+            return this;
+        }
+
+        public Builder backgroundColor(int backgroundColor) {
+            target.setBackgroundColor(backgroundColor);
+            return this;
+        }
+
+        public Builder cancelable(boolean cancelable) {
+            target.setCancelable(cancelable);
+            return this;
+        }
+
+        public Builder cancelOnTouchOutside(boolean cancelOnTouchOutside) {
+            target.setCancelOnTouchOutside(cancelOnTouchOutside);
+            return this;
+        }
+
+        public Builder gif(int resourceId) {
+            target.setGifResource(resourceId);
+            return this;
+        }
+
+        public ProgressGif build() {
+            return target;
+        }
     }
 }

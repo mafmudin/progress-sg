@@ -3,6 +3,19 @@
 # Progress-svg-gif
 android progress dialog dengan menggunakan file svg atau gif
 
+## Kompatibilitas / Migrasi ke 1.0.0
+
+Versi `1.0.0` membenahi penamaan method yang sebelumnya salah eja (breaking change):
+
+| 0.0.1 (lama)                   | 1.0.0 (baru)                   |
+|--------------------------------|--------------------------------|
+| `dissmis()`                    | `dismiss()`                    |
+| `setCancleable(...)`           | `setCancelable(...)`           |
+| `setCancleOnTouchOutside(...)` | `setCancelOnTouchOutside(...)` |
+
+Selain itu kini tersedia **Builder** yang fluent. Jika belum bisa migrasi, pin versi lama:
+`com.github.mafmudin:progress-sg:0.0.1`.
+
 ### cara menambahkan progress-svg-gif ke project android studio dengan menggunakan gradle
 * tambahkan kode di bawah kedalam file ```build.gradle``` (root project)
 
@@ -19,7 +32,7 @@ allprojects {
 
 ```
 dependencies {
-  implementation 'com.github.mafmudin:progress-sg:0.0.1'
+  implementation 'com.github.mafmudin:progress-sg:1.0.0'
 }
 ```
 
@@ -41,7 +54,7 @@ dependencies {
 <dependency>
   <groupId>com.github.mafmudin</groupId>
   <artifactId>progress-sg</artifactId>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 
@@ -55,28 +68,29 @@ dependencies {
 * gunakan progress-svg-gif seperti penggunaan progress dialog, contoh penggunaannya yaitu:
 
 ```
+// Cara 1 — setter (nama method sudah benar di 1.0.0)
 ProgressSvg progressSvg = new ProgressSvg(MainActivity.this);
-//create an object form this class with a Context
 progressSvg.setSvgAssets("loading_circle.svg");
-//set svg with a resource you have prepare before
 progressSvg.setMessage(getResources().getString(R.string.please_wait));
-//set text message as you want
 progressSvg.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.colorAccent));
-//set text color as you want
 progressSvg.setTextSize(11.0f);
-//set text size as you want
 progressSvg.setBackgroundColor(Color.GRAY);
-//set background as you want
+progressSvg.setCancelable(false);
+progressSvg.setCancelOnTouchOutside(false);
 progressSvg.show();
-//call show() method to show the proggress
-progressSvg.setCancleable(false)
-//call cancleable with boolean value
-progressSvg.setCancleOnTouchOutside(false)
-//call setCancleableOnTouchOutside with boolean value
-```
 
-*untuk menyembunyikan progress, panggil fungsi ```dismiss()``` *
-contoh : ```progressSvg.dismiss()```
+// menyembunyikan progress:
+progressSvg.dismiss();
+
+// Cara 2 — Builder
+ProgressSvg p = new ProgressSvg.Builder(MainActivity.this)
+        .svg("loading_circle.svg")
+        .message(getResources().getString(R.string.please_wait))
+        .textColor(Color.BLACK)
+        .cancelable(false)
+        .build();
+p.show();
+```
 
 yap, *enjoy* penggunaan progress-svg-gif :)
 
@@ -91,14 +105,18 @@ yap, *enjoy* penggunaan progress-svg-gif :)
 * contoh pennggunaan progress-svg-gif yaitu: 
 
 ```
- ProgressGif progressGif = new ProgressGif(MainActivity.this);
- //create an object with a Context as a parameter
- progressGif.setGifResource(R.drawable.mag);
- //set progress with a gif file prepared before
- progressGif.setMessage(getResources().getString(R.string.searching));
- //set text message on progress
- progressGif.show();
- //show the progress
+// setter
+ProgressGif progressGif = new ProgressGif(MainActivity.this);
+progressGif.setGifResource(R.drawable.mag);
+progressGif.setMessage(getResources().getString(R.string.searching));
+progressGif.show();
+
+// Builder
+ProgressGif g = new ProgressGif.Builder(MainActivity.this)
+        .gif(R.drawable.mag)
+        .message(getResources().getString(R.string.searching))
+        .build();
+g.show();
 ```
 
 #### Download loading / progress svg, gif atau apng file di link berikut
